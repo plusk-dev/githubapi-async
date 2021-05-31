@@ -1,5 +1,6 @@
 from githubapi.exceptions import UserNotFoundError
-from githubapi._session import make_request
+from githubapi.utils import make_request
+
 
 class User:
 
@@ -7,7 +8,8 @@ class User:
     async def generate_user_object(cls, data: dict):
         try:
             data['username'] = data['login']
-            unwanted = ["login", "node_id", "followers_url", "following_url", "gists_url", "starred_url", "subscriptions_url", "organizations_url", "repos_url", "events_url", "received_events_url"]
+            unwanted = ["login", "node_id", "followers_url", "following_url", "gists_url", "starred_url",
+                        "subscriptions_url", "organizations_url", "repos_url", "events_url", "received_events_url"]
             for i in unwanted:
                 del data[i]
             user = cls()
@@ -16,7 +18,8 @@ class User:
 
             return user
         except KeyError:
-            raise UserNotFoundError("The user with the given username was not found.")
+            raise UserNotFoundError(
+                "The user with the given username was not found.")
 
     @property
     async def get_followers(self):
@@ -25,16 +28,17 @@ class User:
         Returns:
             `list`: An array of users that follow the user.
         """
-        
+
         results = await make_request(f"/users/{self.username}/followers")
         followers = []
         try:
-            for data  in results:
+            for data in results:
                 user = await self.generate_user_object(data)
                 followers.append(user)
             return followers
         except KeyError:
-            raise UserNotFoundError("The user with the given username was not found.")
+            raise UserNotFoundError(
+                "The user with the given username was not found.")
 
     @property
     async def get_following(self):
@@ -46,12 +50,13 @@ class User:
         results = await make_request(f"/users/{self.username}/following")
         following = []
         try:
-            for data  in results:
+            for data in results:
                 user = await self.generate_user_object(data)
                 following.append(user)
             return following
         except KeyError:
-            raise UserNotFoundError("The user with the given username was not found.")
+            raise UserNotFoundError(
+                "The user with the given username was not found.")
 
     @property
     async def get_repos(self):
@@ -71,6 +76,8 @@ class Repository:
         for i in data:
             if not i.endswith("url"):
                 setattr(repo, i, data[i])
+
+        repo.owner = "test"
         return repo
 
     @property

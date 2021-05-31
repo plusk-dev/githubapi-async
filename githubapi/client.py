@@ -1,6 +1,6 @@
-from githubapi.objs import  User
+from githubapi.objs import User
 from githubapi import ENDPOINT
-from githubapi._session import make_request
+from githubapi.utils import make_request
 
 
 class GithubAPIClient:
