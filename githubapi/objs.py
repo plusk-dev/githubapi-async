@@ -64,7 +64,6 @@ class User:
         repos = []
         for repo in results:
             k = await Repository.generate_repository_object(repo)
-            k.owner = await self.generate_user_object(repo['owner'])
             repos.append(k)
         return repos
 
@@ -76,8 +75,7 @@ class Repository:
         for i in data:
             if not i.endswith("url"):
                 setattr(repo, i, data[i])
-
-        repo.owner = "test"
+        repo.owner = await User.generate_user_object(data['owner'])
         return repo
 
     @property
