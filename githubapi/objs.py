@@ -22,7 +22,7 @@ class User:
                 "The user with the given username was not found.")
 
     @property
-    async def get_followers(self):
+    async def get_followers(self) -> list:
         """Get an array of `User` objects that follow the user.
 
         Returns:
@@ -41,7 +41,7 @@ class User:
                 "The user with the given username was not found.")
 
     @property
-    async def get_following(self):
+    async def get_following(self) -> list:
         """Get an array of `User` the user follows.
 
         Returns:
@@ -59,7 +59,12 @@ class User:
                 "The user with the given username was not found.")
 
     @property
-    async def get_repos(self):
+    async def get_repos(self) -> list:
+        """Get a list of the user's repositories.
+
+        Returns:
+            `list`: A list of the user's repositories. Each repository is a `Repository` object.
+        """
         results = await make_request(f"/users/{self.username}/repos")
         repos = []
         for repo in results:

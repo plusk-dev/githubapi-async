@@ -1,13 +1,15 @@
+from githubapi.exceptions import QueryMissingError
 from githubapi.objs import User
 from githubapi import ENDPOINT
 from githubapi.utils import make_request
-
+import warnings
+from typing import List
 
 class GithubAPIClient:
     def __init__(self):
         self.endpoint = ENDPOINT
 
-    async def get_user(self, username: str):
+    async def get_user(self, username: str) -> User:
         """A method to get the data of a user by their username.
 
         Args:
@@ -33,5 +35,23 @@ class GithubAPIClient:
         data = await make_request(f"/users/{username}")
         return await User.generate_user_object(data)
 
-    async def search_user(self, keyword):
-        pass
+    async def search_user(
+        self,
+        keyword: str,
+        page: int = 1,
+        per_page: int = 30,
+        sort: str = "",
+        order: str = ""
+    ) -> List[User]:
+        if per_page > 100:
+            warnings.warn(
+                "The GitHub API does not allow more than 100 search results per page.")
+        response = await make_request(f"/search/users?q={keyword}&page={page}&order={order}&per_page={per_page}&sort={sort}")
+        if len(keyword) == keyword.count(" "):
+            raise QueryMissingError("A Query is required to run search.")
+        users = []
+        for user in response["items"]:
+            m = await User.generate_user_object(user)
+            users.append(m)
+
+        return users
