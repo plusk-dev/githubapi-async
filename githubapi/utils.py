@@ -1,6 +1,5 @@
 import aiohttp
 from githubapi import ENDPOINT as endpoint
-# response = await client.get(f"{endpoint}{url}")
 
 
 async def make_request(url):

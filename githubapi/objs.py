@@ -1,4 +1,5 @@
-from githubapi.exceptions import UserNotFoundError
+from collections import namedtuple
+from githubapi.exceptions import EventTypeNotFound, UserNotFoundError
 from githubapi.utils import make_request
 
 
@@ -71,6 +72,41 @@ class User:
             k = await Repository.generate_repository_object(repo)
             repos.append(k)
         return repos
+
+    async def events(
+        self,
+        per_page: int = 30,
+        page: int = 1,
+        event_type=None,
+    ):
+        response = await make_request(f"/users/{self.username}/events/public?per_page={per_page}&page={page}")
+        events = []
+        for event in response:
+            try:
+                if event_type is None:
+                    event_import = __import__(
+                        "githubapi.events", fromlist=[event["type"]])
+                    event_class = getattr(event_import, event["type"])
+                    event_object = await event_class.create_object(event)
+                    events.append(event_object)
+                elif event_type is not None:
+                    try:
+                        event_import = __import__(
+                            "githubapi.events", fromlist=[str(event_type.__name__)])
+                        event_class = getattr(
+                            event_import, str(event_type.__name__))
+                        event_object = await event_class.create_object(event)
+                        event_payload = type(
+                            "Payload", (object,), event_object.payload)
+                        event_object.payload = event_payload
+                        events.append(event_object)
+                    except Exception:
+                        raise EventTypeNotFound(
+                            f"Event of type {str(event_type.__name__)} does not exist.")
+            except Exception as e:
+                raise EventTypeNotFound(
+                    f"Event of type {event['type']} does not exist.")
+        return events
 
 
 class Repository:

@@ -1,9 +1,10 @@
 from githubapi.exceptions import QueryMissingError
-from githubapi.objs import User
+from githubapi.objs import Repository, User
 from githubapi import ENDPOINT
 from githubapi.utils import make_request
 import warnings
 from typing import List
+
 
 class GithubAPIClient:
     def __init__(self):
@@ -55,3 +56,25 @@ class GithubAPIClient:
             users.append(m)
 
         return users
+
+
+    async def search_repositories(
+        self,
+        keyword: str,
+        page: int = 1,
+        per_page: int = 30,
+        sort: str = "",
+        order: str = ""
+    ) -> List[Repository]:
+        if per_page > 100:
+            warnings.warn(
+                "The GitHub API does not allow more than 100 search results per page.")
+        response = await make_request(f"/search/repositories?q={keyword}&page={page}&order={order}&per_page={per_page}&sort={sort}")
+        if len(keyword) == keyword.count(" "):
+            raise QueryMissingError("A Query is required to run search.")
+        repos = []
+        for repo in response["items"]:
+            m = await Repository.generate_repository_object(repo)
+            repos.append(m)
+
+        return repos
