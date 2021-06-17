@@ -1,4 +1,3 @@
-from collections import namedtuple
 from githubapi.exceptions import EventTypeNotFound, UserNotFoundError
 from githubapi.utils import make_request
 
@@ -74,10 +73,10 @@ class User:
         return repos
 
     async def events(
-        self,
-        per_page: int = 30,
-        page: int = 1,
-        event_type=None,
+            self,
+            per_page: int = 30,
+            page: int = 100,
+            event_type=None,
     ):
         response = await make_request(f"/users/{self.username}/events/public?per_page={per_page}&page={page}")
         events = []
@@ -99,7 +98,8 @@ class User:
                         event_payload = type(
                             "Payload", (object,), event_object.payload)
                         event_object.payload = event_payload
-                        events.append(event_object)
+                        if event["type"] == event_type.__name__:
+                            events.append(event_object)
                     except Exception:
                         raise EventTypeNotFound(
                             f"Event of type {str(event_type.__name__)} does not exist.")
@@ -110,6 +110,10 @@ class User:
 
 
 class Repository:
+
+    async def make_request_for_repo(self, url: str) -> dict:
+        return await make_request(f"/repos/{self.owner.username}/{self.name}{url}")
+
     @classmethod
     async def generate_repository_object(cls, data: dict):
         repo = cls()
@@ -122,6 +126,41 @@ class Repository:
     @property
     async def parent(self):
         if self.fork:
-            response = await make_request(f"/repos/{self.owner.username}/{self.name}")
+            response = await self.make_request_for_repo("")
             parent_repo = response["parent"]
             return await self.generate_repository_object(parent_repo)
+
+    @property
+    async def events(self):
+        response = await self.make_request_for_repo("/events")
+        return response
+
+    @property
+    async def issues(self):
+        response = await self.make_request_for_repo("/issues")
+        return response
+
+    @property
+    async def contributors(self):
+        response = await self.make_request_for_repo("/contributors")
+        return response
+
+    @property
+    async def languages(self):
+        response = await self.make_request_for_repo("/languages")
+        return response
+
+    @property
+    async def comments(self):
+        response = await self.make_request_for_repo("/comments")
+        return response
+
+    @property
+    async def commits(self):
+        response = await self.make_request_for_repo("/commits")
+        return response
+        
+class Issue:
+    @classmethod
+    async def generate_issue_object(cls, data: dict):
+        pass

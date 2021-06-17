@@ -1,2 +1,4 @@
 tests
+.idea
+.vscode
 githubapi/__pycache__
